@@ -66,6 +66,7 @@
   <ItemGroup>
     <Compile Include="Game.cs" />
     <Compile Include="LogitechGSDK.cs" />
+    <Compile Include="NativeMethods.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="Properties\Resources.resx">

@@ -17,22 +17,25 @@ namespace Logi2048
         [STAThread]
         static void Main()
         {
-            // Mutex that will signal us when it's time to quit.
-            ManualResetEvent close = new ManualResetEvent(false);
-            
-            // quit when Windows session ends, aka user logs out
-            SystemEvents.SessionEnded += (s, e) => close.Set();
-
             if (!LogitechGSDK.LogiLcdInit("2048", LogitechGSDK.LOGI_LCD_TYPE_COLOR))
             {
                 MessageBox.Show("Logitech keyboard not found. Quitting...");
-                close.Set();
             }
 
-            var game = new Game(close);
+            var game = new Game();
             game.Start();
-            
-            close.WaitOne();
+            // start the message loop
+            Application.ApplicationExit += Application_ApplicationExit;
+            Application.Run();
+        }
+
+        private static void Application_ApplicationExit(object sender, EventArgs e)
+        {
+            // Detach ourselves as requested by 
+            // http://msdn.microsoft.com/en-us/library/system.windows.forms.application.applicationexit(v=vs.110).aspx
+            Application.ApplicationExit -= Application_ApplicationExit;
+
+            // Shut down the LCD
             LogitechGSDK.LogiLcdShutdown();
         }
     }

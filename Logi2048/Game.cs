@@ -9,8 +9,6 @@ namespace Logi2048
 {
     internal class Game
     {
-        private ManualResetEvent close;
-
         // are we still running?
         private bool isRunning = true;
 
@@ -27,9 +25,8 @@ namespace Logi2048
         private int fps = 0;
         private long startTime = 0;
         
-        public Game(ManualResetEvent close)
+        public Game()
         {
-            this.close = close;
             this.img1 = Image.FromFile("fields.jpg");
             this.img2 = Image.FromFile("Millau.jpg");
         }
@@ -41,18 +38,30 @@ namespace Logi2048
             // 2. draw bitmap in memory
             // 3. draw bitmap on lcd
             startTime = DateTime.Now.Ticks;
-            var inLoop = false;
-            var timer = new Timer(state =>
+
+            // Render loop taken from http://blogs.msdn.com/b/tmiller/archive/2005/05/05/415008.aspx
+            System.Windows.Forms.Application.Idle += (s, e) =>
             {
-                if (!inLoop)
+                while (isAppIdle)
                 {
-                    inLoop = true;
                     UpdateInformation();
                     DrawScreenBuffer();
                     UpdateLCD();
-                    inLoop = false;
                 }
-            }, null, 0, 1);
+            };
+        }
+
+        /// <summary>
+        /// Returns true if the app is still idle (there are no windows messages waiting)
+        /// </summary>
+        /// <returns></returns>
+        private bool isAppIdle
+        {
+            get
+            {
+                NativeMethods.Message msg;
+                return !NativeMethods.PeekMessage(out msg, IntPtr.Zero, 0, 0, 0);
+            }
         }
 
         private void UpdateInformation()
