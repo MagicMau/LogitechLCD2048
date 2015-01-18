@@ -9,9 +9,6 @@ namespace Logi2048
 {
     internal class Game
     {
-        // are we still running?
-        private bool isRunning = true;
-
         // the screenbuffer. allocated only once, saves time
         private byte[] screenbuffer = new byte[LogitechGSDK.LOGI_LCD_COLOR_WIDTH * LogitechGSDK.LOGI_LCD_COLOR_HEIGHT * 4];
 
@@ -19,16 +16,16 @@ namespace Logi2048
         private Bitmap screen = new Bitmap(LogitechGSDK.LOGI_LCD_COLOR_WIDTH, LogitechGSDK.LOGI_LCD_COLOR_HEIGHT);
 
         // game state
-        private bool flipper = true;
-        private Image img1, img2;
-        private long frameCounter = 0;
-        private int fps = 0;
-        private long startTime = 0;
+        private Board board;
+        private GameEngine engine;
+        private int cellSize = LogitechGSDK.LOGI_LCD_COLOR_HEIGHT / 4;
+
+        private int y = 20; private int dir = 1;
         
         public Game()
         {
-            this.img1 = Image.FromFile("fields.jpg");
-            this.img2 = Image.FromFile("Millau.jpg");
+            board = new Board(4);
+            engine = new GameEngine(board);
         }
 
         internal void Start()
@@ -37,7 +34,6 @@ namespace Logi2048
             // 1. update information
             // 2. draw bitmap in memory
             // 3. draw bitmap on lcd
-            startTime = DateTime.Now.Ticks;
 
             // Render loop taken from http://blogs.msdn.com/b/tmiller/archive/2005/05/05/415008.aspx
             System.Windows.Forms.Application.Idle += (s, e) =>
@@ -52,36 +48,30 @@ namespace Logi2048
         }
 
         /// <summary>
-        /// Returns true if the app is still idle (there are no windows messages waiting)
+        /// Updates the game state
         /// </summary>
-        /// <returns></returns>
-        private bool isAppIdle
-        {
-            get
-            {
-                NativeMethods.Message msg;
-                return !NativeMethods.PeekMessage(out msg, IntPtr.Zero, 0, 0, 0);
-            }
-        }
-
         private void UpdateInformation()
         {
-            flipper = !flipper;
-            double time = (DateTime.Now.Ticks - startTime) / 10000000;
-            frameCounter++;
-            fps = (int)(frameCounter / time);
-            if (fps < 0) fps = 0;
+            if (dir > 0 && y > 200)
+                dir = -1;
+            if (dir < 0 && y < 20)
+                dir = 1;
+
+            y += dir;
         }
 
+        /// <summary>
+        /// Draws the game state to the screen buffer
+        /// </summary>
         private void DrawScreenBuffer()
         {
-            // load a pretty picture
-            var img = flipper ? img1 : img2;
-            // resize the image to the width and height of the Logitech screen
-
-            screen = new Bitmap(img, LogitechGSDK.LOGI_LCD_COLOR_WIDTH, LogitechGSDK.LOGI_LCD_COLOR_HEIGHT);
-            // Draw it on screen!
-            //Draw(bitmap);
+            using (Graphics g = Graphics.FromImage(screen))
+            {
+                // clear the screen
+                g.FillRectangle(Brushes.Black, 0, 0, screen.Width, screen.Height);
+                // draw something
+                g.DrawString("Boe", new Font("Comic Sans MS", 12), Brushes.White, 20, y);
+            }
         }
 
         /// <summary>
@@ -100,10 +90,21 @@ namespace Logi2048
             screen.UnlockBits(data);
             // Draw the background
             LogitechGSDK.LogiLcdColorSetBackground(screenbuffer);
-            // draw fps
-            LogitechGSDK.LogiLcdColorSetTitle(string.Format("{0} fps", fps), 255, 255, 255);
             // And signal an update
             LogitechGSDK.LogiLcdUpdate();
+        }
+
+        /// <summary>
+        /// Returns true if the app is still idle (there are no windows messages waiting)
+        /// </summary>
+        /// <returns></returns>
+        private bool isAppIdle
+        {
+            get
+            {
+                NativeMethods.Message msg;
+                return !NativeMethods.PeekMessage(out msg, IntPtr.Zero, 0, 0, 0);
+            }
         }
     }
 }
