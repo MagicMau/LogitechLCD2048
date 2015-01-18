@@ -22,7 +22,6 @@ namespace Logi2048
             
             // quit when Windows session ends, aka user logs out
             SystemEvents.SessionEnded += (s, e) => close.Set();
-            Application.ApplicationExit += (s, e) => close.Set();
 
             if (!LogitechGSDK.LogiLcdInit("2048", LogitechGSDK.LOGI_LCD_TYPE_COLOR))
             {
@@ -32,7 +31,7 @@ namespace Logi2048
 
             var game = new Game(close);
             game.Start();
-
+            
             close.WaitOne();
             LogitechGSDK.LogiLcdShutdown();
         }
