@@ -10,7 +10,7 @@ namespace Logi2048
     {
         private static readonly Color[] TileColors =
         {
-            Color.Blue,
+            Color.Black,
             Color.Red,
             Color.Blue,
             Color.Orange,

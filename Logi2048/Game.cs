@@ -23,7 +23,9 @@ namespace Logi2048
         private StringFormat tileStringFormat;
 
         private bool isInitializing = true;
-        private Tile[,] tiles;
+
+        // keyboard state
+        private bool isUpDown = false, isRightDown = false, isDownDown = false, isLeftDown = false, isCancelDown = false;
 
         
         public Game()
@@ -49,9 +51,12 @@ namespace Logi2048
             {
                 while (isAppIdle)
                 {
-                    UpdateInformation();
-                    DrawScreenBuffer();
-                    UpdateLCD();
+                    if (LogitechGSDK.LogiLcdIsConnected(LogitechGSDK.LOGI_LCD_TYPE_COLOR))
+                    {
+                        UpdateInformation();
+                        DrawScreenBuffer();
+                        UpdateLCD();
+                    }
                 }
             };
         }
@@ -61,17 +66,7 @@ namespace Logi2048
         /// </summary>
         private void UpdateInformation()
         {
-            if (isInitializing)
-            {
-                tiles = new Tile[4, 4];
-                for (int row = 0; row < 4; row++)
-                {
-                    for (int col = 0; col < 4; col++)
-                    {
-                        tiles[row, col] = new Tile(row, col);
-                    }
-                }
-            }
+            CheckButtons();
         }
 
         /// <summary>
@@ -86,24 +81,19 @@ namespace Logi2048
                 // draw the board
                 using (Font f = new Font("Arial", 16, FontStyle.Bold))
                 {
-                    for (int row = 0; row < 4; row++)
+                    foreach (var tile in board)
                     {
-                        for (int col = 0; col < 4; col++)
-                        {
-                            DrawTile(row, col, g, f);
-                        }
+                        DrawTile(tile, g, f);
                     }
                 }
             }
         }
 
-        private void DrawTile(int row, int col, Graphics g, Font f)
+        private void DrawTile(Tile tile, Graphics g, Font f)
         {
-            int x = col * cellSize + marginLeft;
-            int y = row * cellSize;
+            int x = tile.Column * cellSize + marginLeft;
+            int y = tile.Row * cellSize;
             Rectangle rect = new Rectangle(x, y, cellSize, cellSize);
-
-            Tile tile = tiles[row, col];
 
             using (Brush brush = new SolidBrush(tile.Color))
             {
@@ -135,6 +125,60 @@ namespace Logi2048
             // And signal an update
             LogitechGSDK.LogiLcdUpdate();
         }
+
+        private void CheckButtons()
+        {
+            if (LogitechGSDK.LogiLcdIsButtonPressed(LogitechGSDK.LOGI_LCD_COLOR_BUTTON_DOWN))
+            {
+                isDownDown = true;
+            }
+            else if (isDownDown)
+            {
+                isDownDown = false;
+                engine.Move(Direction.Down);
+            }
+
+            if (LogitechGSDK.LogiLcdIsButtonPressed(LogitechGSDK.LOGI_LCD_COLOR_BUTTON_LEFT))
+            {
+                isLeftDown = true;
+            }
+            else if (isLeftDown)
+            {
+                isLeftDown = false;
+                engine.Move(Direction.Left);
+            }
+
+            if (LogitechGSDK.LogiLcdIsButtonPressed(LogitechGSDK.LOGI_LCD_COLOR_BUTTON_UP))
+            {
+                isUpDown = true;
+            }
+            else if (isUpDown)
+            {
+                isUpDown = false;
+                engine.Move(Direction.Up);
+            }
+
+            if (LogitechGSDK.LogiLcdIsButtonPressed(LogitechGSDK.LOGI_LCD_COLOR_BUTTON_RIGHT))
+            {
+                isRightDown = true;
+            }
+            else if (isRightDown)
+            {
+                isRightDown = false;
+                engine.Move(Direction.Right);
+            }
+
+            if (LogitechGSDK.LogiLcdIsButtonPressed(LogitechGSDK.LOGI_LCD_COLOR_BUTTON_CANCEL))
+            {
+                isCancelDown = true;
+            }
+            else if (isCancelDown)
+            {
+                isCancelDown = false;
+                engine.Reset();
+            }
+        }
+
 
         /// <summary>
         /// Returns true if the app is still idle (there are no windows messages waiting)
