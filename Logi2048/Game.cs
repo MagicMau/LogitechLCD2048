@@ -22,7 +22,7 @@ namespace Logi2048
         private int marginLeft = 0;
         private StringFormat tileStringFormat;
 
-        private bool isInitializing = true;
+        private bool hasStateChanged = true;
 
         // keyboard state
         private bool isUpDown = false, isRightDown = false, isDownDown = false, isLeftDown = false, isCancelDown = false;
@@ -51,12 +51,14 @@ namespace Logi2048
             {
                 while (isAppIdle)
                 {
-                    if (LogitechGSDK.LogiLcdIsConnected(LogitechGSDK.LOGI_LCD_TYPE_COLOR))
+                    UpdateInformation();
+                    if (hasStateChanged)
                     {
-                        UpdateInformation();
                         DrawScreenBuffer();
                         UpdateLCD();
+                        hasStateChanged = false;
                     }
+                    Thread.Sleep(1);
                 }
             };
         }
@@ -136,6 +138,7 @@ namespace Logi2048
             {
                 isDownDown = false;
                 engine.Move(Direction.Down);
+                hasStateChanged = true;
             }
 
             if (LogitechGSDK.LogiLcdIsButtonPressed(LogitechGSDK.LOGI_LCD_COLOR_BUTTON_LEFT))
@@ -146,6 +149,7 @@ namespace Logi2048
             {
                 isLeftDown = false;
                 engine.Move(Direction.Left);
+                hasStateChanged = true;
             }
 
             if (LogitechGSDK.LogiLcdIsButtonPressed(LogitechGSDK.LOGI_LCD_COLOR_BUTTON_UP))
@@ -156,6 +160,7 @@ namespace Logi2048
             {
                 isUpDown = false;
                 engine.Move(Direction.Up);
+                hasStateChanged = true;
             }
 
             if (LogitechGSDK.LogiLcdIsButtonPressed(LogitechGSDK.LOGI_LCD_COLOR_BUTTON_RIGHT))
@@ -166,6 +171,7 @@ namespace Logi2048
             {
                 isRightDown = false;
                 engine.Move(Direction.Right);
+                hasStateChanged = true;
             }
 
             if (LogitechGSDK.LogiLcdIsButtonPressed(LogitechGSDK.LOGI_LCD_COLOR_BUTTON_CANCEL))
@@ -176,6 +182,7 @@ namespace Logi2048
             {
                 isCancelDown = false;
                 engine.Reset();
+                hasStateChanged = true;
             }
         }
 
