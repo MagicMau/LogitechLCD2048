@@ -10,6 +10,7 @@ namespace Logi2048
     {
         private static readonly Color[] TileColors =
         {
+            Color.Blue,
             Color.Red,
             Color.Blue,
             Color.Orange,
@@ -26,7 +27,7 @@ namespace Logi2048
         private static int ValueToColorIndex(int value)
         {
             var index = 0;
-            for (int temp = value; temp > 2; temp >>= 1, index++) ;
+            for (int temp = value; temp > 1; temp >>= 1, index++) ;
             return index;
         }
 
@@ -34,6 +35,14 @@ namespace Logi2048
         public int Column { get; private set; }
         public int Value { get; set; }
         
+        public Color Color
+        {
+            get
+            {
+                return TileColors[ValueToColorIndex(Value)];
+            }
+        }
+
         public bool Merged { get;  private set; }
         public Tile MergedFrom { get; private set; }
         

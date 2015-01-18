@@ -19,13 +19,22 @@ namespace Logi2048
         private Board board;
         private GameEngine engine;
         private int cellSize = LogitechGSDK.LOGI_LCD_COLOR_HEIGHT / 4;
+        private int marginLeft = 0;
+        private StringFormat tileStringFormat;
 
-        private int y = 20; private int dir = 1;
+        private bool isInitializing = true;
+        private Tile[,] tiles;
+
         
         public Game()
         {
             board = new Board(4);
             engine = new GameEngine(board);
+
+            marginLeft = (LogitechGSDK.LOGI_LCD_COLOR_WIDTH - 4 * cellSize) / 2;
+            tileStringFormat = new StringFormat();
+            tileStringFormat.LineAlignment = StringAlignment.Center;
+            tileStringFormat.Alignment = StringAlignment.Center;
         }
 
         internal void Start()
@@ -52,12 +61,17 @@ namespace Logi2048
         /// </summary>
         private void UpdateInformation()
         {
-            if (dir > 0 && y > 200)
-                dir = -1;
-            if (dir < 0 && y < 20)
-                dir = 1;
-
-            y += dir;
+            if (isInitializing)
+            {
+                tiles = new Tile[4, 4];
+                for (int row = 0; row < 4; row++)
+                {
+                    for (int col = 0; col < 4; col++)
+                    {
+                        tiles[row, col] = new Tile(row, col);
+                    }
+                }
+            }
         }
 
         /// <summary>
@@ -69,8 +83,36 @@ namespace Logi2048
             {
                 // clear the screen
                 g.FillRectangle(Brushes.Black, 0, 0, screen.Width, screen.Height);
-                // draw something
-                g.DrawString("Boe", new Font("Comic Sans MS", 12), Brushes.White, 20, y);
+                // draw the board
+                using (Font f = new Font("Arial", 16, FontStyle.Bold))
+                {
+                    for (int row = 0; row < 4; row++)
+                    {
+                        for (int col = 0; col < 4; col++)
+                        {
+                            DrawTile(row, col, g, f);
+                        }
+                    }
+                }
+            }
+        }
+
+        private void DrawTile(int row, int col, Graphics g, Font f)
+        {
+            int x = col * cellSize + marginLeft;
+            int y = row * cellSize;
+            Rectangle rect = new Rectangle(x, y, cellSize, cellSize);
+
+            Tile tile = tiles[row, col];
+
+            using (Brush brush = new SolidBrush(tile.Color))
+            {
+                g.FillRectangle(brush, rect);
+                g.DrawRectangle(Pens.White, x, y, cellSize - 1, cellSize - 1);
+                if (tile.Value > 0)
+                {
+                    g.DrawString(tile.Value.ToString(), f, Brushes.White, rect, tileStringFormat);
+                }
             }
         }
 
